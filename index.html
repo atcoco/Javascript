@@ -1,0 +1,350 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+	<script language="JavaScript" type="text/javascript" src="./jquery-3.2.1.js"></script>
+	<script src="./js/sql.js"> </script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="./styles.css">
+  <body onload="clear()">
+    <div id="app" />
+    	<div class="container item_border" style="margin-top: 34px;">
+    		<div style="text-align: left; color: #fd7a5f;	">
+		    	<strong>Add</strong><br><br>	
+		    </div>
+	    	<form  id = "myForm" onsubmit="return " >
+	    		<div class = "row">
+	    			<div class=" col-sm-2">
+	    				Name:<input type=" text" class = "form-control" style="width:120px;" name="name">
+	    			</div>
+	    			<div class="col-sm-2">
+	    				phone:<input type="text" class = "form-control" style="width:120px;" name="phone" placeholder="xx-xxx-xxxx">
+	    			</div>
+	    			<div class="col-sm-2">
+	    				email:	<input type="text" class = "form-control" style="width:120px;" name="email">
+	    			</div>
+	    			<div class="col-sm-2"><br>
+	    				<input type="button" value="add" class = "form-control btn btn-primary" style="width:120px;" onclick="items.add()">
+	    			</div>
+	    			<div class="col-sm-4"></div>
+	    		</div>
+	    	</form>
+	    </div>
+    	
+
+    </div>
+    <br><br>
+    <div class=" container item_border">
+    	<div style="text-align: left; color: #fd7a5f;	">
+	    	<strong>Search</strong><br><br>	
+	    </div>
+	    <div>
+	    	 
+	    	<form  id = "myForm2" onsubmit="return " > 
+	    		<div class="row">   		
+	    			<div class="col-sm-2 ">
+	    				Name:<input type=" text" name="index" class = "form-control " style="width:120px;" > 
+	    			</div>
+	    			<div class="col-sm-2">
+	    				Phone_Number:<input type=" text" name="index" class = "form-control" style="width:120px;"> 
+	    			</div> 
+	    			<div class="col-sm-2"><br>
+	    				<input type="button" value="Search" onclick="items.search()" class = "form-control btn btn-primary" style="width:120px;">
+	    			</div> 	
+	    		 	
+	    		</div>
+	    	</form>
+	    </div><br>
+	  </div><br><br>
+   
+
+    
+    <div class="container">
+    	<div class="row title" >
+	    		<div class=" col-sm-2 header_style item_border" >
+	    			Name
+	    		</div>
+	    		<div class=" col-sm-2 header_style item_border " >
+	    			Phone Number
+	    		</div>
+	    		<div class=" col-sm-2 header_style item_border"  >
+	    			Email
+	    		</div>
+	    		<div class=" col-sm-2 header_style item_border" >
+	    			Action
+	    		</div>
+	    	</div>
+	    <div id = "item_list">
+	    	
+	    </div>
+    
+    	<div>
+	    	 <button onclick="items.prePage()"> <</button>
+	    	 <button onclick="items.nextPage()"> ></button>
+    	</div>
+    </div>
+    
+  </body>
+
+  <script>
+  	window.onload = function() {  		
+  			window.localStorage.clear(); 		
+  	};
+
+  	var PhoneBook = function(){
+  			var db = new SQL.Database();
+  			db.run("CREATE TABLE test(name,phone,email)");
+
+  			var index = 0;
+  			var contacts = 15;
+  			var page = 0;
+  			this.getIndex = function(){
+  					return index;
+  			}
+
+  			this.getContacts = function(){
+  				return contacts;
+  			}
+  			this.getPage = function(){
+  				return page;
+  			}
+  			this.setPage = function(m_page){
+  				page = m_page;
+  			}
+  			this.setIndex = function(){
+  					index = index + 1;
+  			}
+  			this.removeIndex = function(){
+  				index = index - 1;
+  			}
+  			this.check_length = function (name) {
+				    
+				    return name.length<100
+				}
+  			this.validate_email = function (email) {
+				    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+				    return re.test(email);
+				}
+
+				this.IsNumeric = function (char) {
+					if(char.length > 11){
+						return false;
+					}
+				  if(char[2] != '-' || char[6] != '-' ){
+				  	return false;
+				  }
+				  
+				  for(var i = 0; i < char.length; i++){
+				  	
+				  	if ((char[i] < '0' || char[i] > '9') && i != 2 && i != 6)
+
+				  		return false;
+				  }
+				  return true;
+				}
+
+				this.getDB = function(){
+					return db;
+				}
+
+  	}
+  	PhoneBook.prototype = {
+  		nextPage: function(){
+  			page = this.getPage();
+  			contacts = this.getContacts();
+  			var counts = page*contacts+contacts;
+  			if(counts > this.getIndex()){
+  				alert("This is last page");
+  				return;
+  			}
+  			this.setPage(page+1);
+  			document.getElementById('item_list').innerHTML = "";
+  			this.list();
+
+  		},
+  		prePage: function(){
+  			var page = this.getPage();
+  			if(page == 0){
+  				alert("This is first page");
+  				return;
+  			}
+  			this.setPage(page-1);
+  			document.getElementById('item_list').innerHTML = "";
+  			this.list();
+  		},
+  		
+  		add: function(contactInfo) { 			
+  			var time = new Date();
+  			var t = time.getTime();
+  			var inputs = $("#myForm").serializeArray();
+
+  			if(!this.check_length(inputs[0].value)){
+  				alert("It's too long");
+  			}
+  			if(!this.validate_email(inputs[2].value)){
+  				alert("Invalid Email");
+  				return;
+  			}
+  			if(!this.IsNumeric(inputs[1].value)){
+  				alert("Invalid Phone Nubmer");
+  				return;
+  			}
+
+  			var temp_index = this.getIndex(); 			
+  			localStorage.setItem("mmm"+temp_index, JSON.stringify(inputs));
+  			
+  			this.setIndex();			
+  			this.list();
+  			
+  		},
+		remove: function(index) {					
+			index = parseInt(index);
+		
+			var cnt = 0;
+			var name = new Array();
+			var email = new Array();
+			var phone = new Array();
+			var sort_cnt = 0;
+			for(var i in window.localStorage)
+			{
+				if(i.includes("mmm")){
+					val = localStorage.getItem(i);
+					var item = JSON.parse(val);				
+					name[sort_cnt] = item[0].value;
+					phone[sort_cnt] = item[1].value;
+					email[sort_cnt] = item[2].value;
+					sort_cnt++;				
+				}					
+			}
+
+			for(var i in window.localStorage)
+			{			
+				if(i.includes("mmm")){				
+					var id = i.replace("mmm", "");
+				
+					if(parseInt(index) == parseInt(id)){				
+						console.log("remove");
+						console.log(index);
+						localStorage.removeItem(i);
+						this.removeIndex();
+						index = -1;
+						this.list();						
+					}
+				}
+			}
+		},
+		search: function(query) {
+				document.getElementById('item_list').innerHTML = "";
+
+				var inputs = $("#myForm2").serializeArray();
+				var name = new Array();
+				var email = new Array();
+				var phone = new Array();
+
+				var cnt = 0;
+				for(var i in window.localStorage)
+				{
+					//console.log(i);
+					if( i.includes("mmm")){
+						val = localStorage.getItem(i);
+						var item = JSON.parse(val);
+						//console.log(item[0].value);
+
+						if(inputs[0].value == "" && inputs[1].value == ""){
+							name[cnt] = item[0].value;
+							phone[name[cnt]] = item[1].value;
+							email[name[cnt]] = item[2].value;
+
+							cnt++;	
+						}
+						else if( inputs[0].value != "" && inputs[1].value == "" && item[0].value.includes(inputs[0].value) ){
+						
+							name[cnt] = item[0].value;
+							phone[name[cnt]] = item[1].value;
+							email[name[cnt]] = item[2].value;
+
+							cnt++;				
+						}
+						else if( inputs[0].value == "" && inputs[1].value != "" &&item[1].value.includes(inputs[1].value) ){
+						
+							name[cnt] = item[0].value;
+							phone[name[cnt]] = item[1].value;
+							email[name[cnt]] = item[2].value;
+
+							cnt++;				
+						}
+						else if( inputs[0].value != "" && inputs[1].value != "" && item[1].value.includes(inputs[1].value) && item[0].value.includes(inputs[0].value)){
+						
+							name[cnt] = item[0].value;
+							phone[name[cnt]] = item[1].value;
+							email[name[cnt]] = item[2].value;
+
+							cnt++;				
+						}
+					}
+					
+				}
+
+				name.sort();
+
+				var size = this.getIndex();
+				var start = this.getPage()*this.getContacts();
+				var end = start + this.getContacts();
+				if( end > this.getIndex() ){
+					end = this.getIndex();
+				}
+			
+				for(var i = 0; i < cnt; i ++){
+					var str = "<div class = 'row '><div class = 'col-sm-2 item_border'>"+name[i]+"</div><div class = 'col-sm-2 item_border'>"+phone[name[i]]+"</div><div class = 'col-sm-2 item_border'>"+email[name[i]]+"</div>"+ "<div class = 'col-sm-2 item_border'><button class = 'del_btn' onclick='items.remove("+i+")'>delete</button></div></div>" ;
+					$('#item_list').append(str);		
+				}
+		},
+		list: function() {			
+			document.getElementById('item_list').innerHTML = "";
+			var name = new Array();
+			var email = new Array();
+			var phone = new Array();
+			var cnt = 0;
+
+			for(var i in window.localStorage)
+			{				
+				if(i.includes("mmm")){
+					val = localStorage.getItem(i);
+					var item = JSON.parse(val);
+										
+					name[cnt] = item[0].value;
+					phone[name[cnt]] = item[1].value;
+					email[name[cnt]] = item[2].value;
+
+					cnt++;				
+				}		
+				
+			}
+
+			
+			name.sort();
+			window.localStorage.clear();
+			for(var i = 0; i < cnt; i++){
+				var item = new Array();
+				item = [{"name": "name","value": name[i]},{"name": "phone","value": phone[name[i]]},{"name": "email","value": email[name[i]]}];
+				console.log(item);
+				localStorage.setItem("mmm"+i, JSON.stringify(item));
+			}
+
+			var size = this.getIndex();
+			var start = this.getPage()*this.getContacts();
+			var end = start + this.getContacts();
+			if( end > this.getIndex() ){
+				end = this.getIndex();
+			}
+	
+			for(var i = start; i < end; i ++){
+					var str = "<div class = ' row'><div class = 'col-sm-2 item_border'>"+name[i]+"</div><div class = 'col-sm-2 item_border'>"+phone[name[i]]+"</div><div class = 'col-sm-2 item_border'>"+email[name[i]]+"</div>"+ "<div class = 'col-sm-2 item_border'><button class = 'del_btn' onclick='items.remove("+i+")'>delete</button></div></div>" ;
+				$('#item_list').append(str);	
+			}
+		},
+  	};
+  	var items = new PhoneBook();
+  </script>
+</html>
